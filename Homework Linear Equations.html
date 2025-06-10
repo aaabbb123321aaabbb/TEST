@@ -1,0 +1,221 @@
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel="stylesheet" href="../style.css" type="text/css">
+  <title>problem linear equations</title>
+</head>
+<body>
+<font size="-1">
+<a href="../">&larr;to practical programming</a>
+</font>
+
+<h3>Homework "Linear Equations"</h3>
+
+<b>Objective</b>
+
+<p>Implement functions to i) solve linear equations; ii) calculate
+matrix inverse; and iii) calculate matrix determinant. The method to
+use is the modified Gram-Schmidt orthogonalization.
+
+<p>The Gram-Schmidt orthogonalization process, even modified, is less
+stable and accurate than the Givens roation algorithm.  On the other
+hand, the Gram-Schmidt process produces the j-th orthogonalized vector
+after the j-th iteration, while orthogonalization using Givens rotations
+produces all vectors only at the end of the process. This makes the
+Gram–Schmidt process applicable for iterative methods like the
+Arnoldir/Lanczos iteration.
+
+Also its ease of implementation makes it a useful exercise for the
+students.
+
+</p>
+
+
+<b>Hints</b>
+
+	<ul>
+<li>To work with matrices and vectors you may
+use the matrix and vector classes from
+<a href="../csharp/matlib/matrix"><code>../csharp/matlib/matrix</code></a>
+[<a href="../c++/matrix"><code>../c++/matrix</code></a>].
+They
+implement some basic matrix/vector operations. Alternatively,
+you can implement your own matrix/vector classes the way you like
+it (a good way to learn a language). At the bare minimum your classes
+might look something like (read <a
+href="https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/indexers">the
+manual</a> about indexers in Csharp),
+
+	<pre>
+public class vector{
+   public double[] data;
+   public int size =&gt; data.Length;
+   public double this[int i]{   // indexer
+      get =&gt; data[i];        // getter
+      set =&gt; data[i]=value;  // setter
+      }
+   public vector(int n){        // constructor
+      data=new double[n];
+      }
+}
+	</pre>
+
+<pre>
+public class matrix{
+	public readonly int size1,size2;
+	private double[] data;  // to keep matrix elements
+	public matrix(int n,int m){      // constructor
+		size1=n; size2=m;
+		data = new double[size1*size2];
+		}
+	public double this[int i,int j]{     // indexer
+		get =&gt; data[i+j*size1];
+		set =&gt; data[i+j*size1]=value;
+		}
+}
+</pre>
+
+<li>You can generate (pseudo-)random numbers, uniformly distributed from
+zero to one, like this,
+	<pre>
+var rnd = new System.Random(1); /* or any other seed */
+double x = rnd.NextDouble();
+double y = rnd.NextDouble();
+double z = rnd.NextDouble();
+	</pre>
+
+<li>QR-factorization of a matrix consists of two matrices, Q and R.
+There are several options for the interface to your routines:
+
+	<ol>
+
+<li><p>Return Q and R in a tuple (like scipy),
+
+	<pre>
+public static class QR{
+   public static (matrix,matrix) decomp(matrix A){
+      matrix Q=A.copy();
+      matrix R=new matrix(A.size2,A.size2);
+      /* orthogonalize Q and fill-in R */
+      return (Q,R);
+      }
+   public static vector solve(matrix Q, matrix R, vector b){ ... }
+   public static double det(matrix R){ ... }
+   public static matrix inverse(matrix Q,matrix R){ ... }
+}
+	</pre>
+
+<li>Keep Q and R and an instance of the non-static class QR,
+
+	<pre>
+public class QR{
+   matrix Q,R;
+   public QR(matrix A){ /* the above "decomp" is the constructor here */
+      Q=A.copy();
+      R=new matrix(A.size2,A.size2);
+      /* orthogonalize Q and fill-in R */
+      }
+   public vector solve(vector b){ ... }
+   public double det(){ ... }
+   public matrix inverse(){ ... }
+} </pre>
+
+<li>You can add matrices Q and R
+and the methods
+<code>decomp</code>,
+<code>solve</code>,
+<code>inverse</code>,
+<code>det</code>
+directly to your matrix class (declare it <code>partial</code> then
+you can add things to it using a file in your homework directory).
+
+	</ol>
+
+	</ul>
+
+<b>Tasks</b>
+
+<ol type=A>
+
+<li><p>(6 points) <b>Solving linear equations using QR-decomposition
+by modified Gram-Schmidt orthogonalization</b>
+
+<p>Implement a static (or, at your choice, non-static) class "QR"
+with functions "decomp", "solve", and "det" (as indicated above). In
+the non-static class "decomp" becomes a constructor and must be called
+"QR").
+
+<p>The function "decomp" (or the constructor QR) should perform
+stabilized Gram-Schmidt orthogonalization of an n&times;m (where n&ge;m)
+matrix A and calculate R.
+
+<p>
+The function/method "solve" should use the matrices Q and R from
+"decomp" and solve the
+equation <i>QRx=b</i> for the given right-hand-side "b".
+
+<p>The function/method "det" should return the determinant of matrix R which
+is equal to the determinant of the original matrix.  Determinant of a
+triangular matrix is given by the product of its diagonal elements.
+
+<p>
+Check that your "decomp" works as intended:
+<ul>
+<li>generate a random tall (n&gt;m) matrix A (of a modest size);
+<li>factorize it into QR;
+<li>check that R is upper triangular;
+<li>check that Q<sup>T</sup>Q=1;
+<li>check that QR=A;
+</ul>
+
+<p>
+Check that you "solve" works as intended:
+<ul>
+<li>generate a random square matrix A (of a modest size);
+<li>generate a random vector b (of the same size);
+<li>factorize A into QR;
+<li>solve QRx=b;
+<li>check that Ax=b;
+</ul>
+
+<li><p> (3 points) <b>Matrix inverse by Gram-Schmidt QR factorization</b>
+
+
+<p>Add the function/method "inverse" to your "QR" class that, using
+the calculated Q and R, should calculate the inverse of the matrix A
+and returns it.
+
+<p>
+Check that you function works as intended:
+<ul>
+<li>generate a random square matrix A (of a modest size);
+<li>factorize A into QR;
+<li>calculate the inverse B;
+<li>check that AB=I, where I is the identity matrix;
+</ul>
+
+<li><p> (1 point) <b>Operations count for QR-decomposition</b>
+
+<p>Measure the time it takes to QR-factorize (with your implementation)
+a random NxN matrix as function of N. Convince yourself that it goes like
+O(N³): measure (using the POSIX <code>time</code> utility) the time
+it takes to QR-factorize an N&times;N matrix for several values of N,
+plot the time as function of N in gnuplot and fit with N³.
+
+<p>You can build your timing data like this (you might want to read
+<pre>man bash | less +/"for name"
+man 1 seq
+man 1 time </pre>
+),
+	<pre>
+out.times.data : main.exe
+	&gt;$@
+	for N in $$(seq 100 20 200); do \
+		time --format "$$N %e" --output $@ --append \
+		mono $&lt; -size:$$N 1&gt;out 2&gt;err ;\
+	done </pre>
+
+</ol>
+
+</body>
+</html>
