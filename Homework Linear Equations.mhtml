@@ -1,0 +1,588 @@
+From: <Saved by Blink>
+Snapshot-Content-Location: https://fedorov.sdfeu.org/prog/homeworks/lineq.htm
+Subject: problem linear equations
+Date: Tue, 10 Jun 2025 15:12:01 +0200
+MIME-Version: 1.0
+Content-Type: multipart/related;
+	type="text/html";
+	boundary="----MultipartBoundary--ynMlOqMsDs1jCX32AVA8mIbGNU1nG4CScNQqCg7sY2----"
+
+
+------MultipartBoundary--ynMlOqMsDs1jCX32AVA8mIbGNU1nG4CScNQqCg7sY2----
+Content-Type: text/html
+Content-ID: <frame-2715656804641536B490E8E93A76978A@mhtml.blink>
+Content-Transfer-Encoding: quoted-printable
+Content-Location: https://fedorov.sdfeu.org/prog/homeworks/lineq.htm
+
+<html><head><meta http-equiv=3D"Content-Type" content=3D"text/html; charset=
+=3DUTF-8">
+ =20
+<link rel=3D"stylesheet" href=3D"https://fedorov.sdfeu.org/prog/style.css" =
+type=3D"text/css">
+  <title>problem linear equations</title>
+<link type=3D"text/css" rel=3D"stylesheet" href=3D"chrome-extension://fheog=
+gkfdfchfphceeifdbepaooicaho/css/mcafee_fonts.css"></head>
+<body>
+<font size=3D"-1">
+<a href=3D"https://fedorov.sdfeu.org/prog/">=E2=86=90to practical programmi=
+ng</a>
+</font>
+
+<h3>Homework "Linear Equations"</h3>
+
+<b>Objective</b>
+
+<p>Implement functions to i) solve linear equations; ii) calculate
+matrix inverse; and iii) calculate matrix determinant. The method to
+use is the modified Gram-Schmidt orthogonalization.
+
+</p><p>The Gram-Schmidt orthogonalization process, even modified, is less
+stable and accurate than the Givens roation algorithm.  On the other
+hand, the Gram-Schmidt process produces the j-th orthogonalized vector
+after the j-th iteration, while orthogonalization using Givens rotations
+produces all vectors only at the end of the process. This makes the
+Gram=E2=80=93Schmidt process applicable for iterative methods like the
+Arnoldir/Lanczos iteration.
+
+Also its ease of implementation makes it a useful exercise for the
+students.
+
+</p>
+
+
+<b>Hints</b>
+
+	<ul>
+<li>To work with matrices and vectors you may
+use the matrix and vector classes from
+<a href=3D"https://fedorov.sdfeu.org/prog/csharp/matlib/matrix"><code>../cs=
+harp/matlib/matrix</code></a>
+[<a href=3D"https://fedorov.sdfeu.org/prog/c++/matrix"><code>../c++/matrix<=
+/code></a>].
+They
+implement some basic matrix/vector operations. Alternatively,
+you can implement your own matrix/vector classes the way you like
+it (a good way to learn a language). At the bare minimum your classes
+might look something like (read <a href=3D"https://docs.microsoft.com/en-us=
+/dotnet/csharp/programming-guide/indexers">the
+manual</a> about indexers in Csharp),
+
+	<pre>public class vector{
+   public double[] data;
+   public int size =3D&gt; data.Length;
+   public double this[int i]{   // indexer
+      get =3D&gt; data[i];        // getter
+      set =3D&gt; data[i]=3Dvalue;  // setter
+      }
+   public vector(int n){        // constructor
+      data=3Dnew double[n];
+      }
+}
+	</pre>
+
+<pre>public class matrix{
+	public readonly int size1,size2;
+	private double[] data;  // to keep matrix elements
+	public matrix(int n,int m){      // constructor
+		size1=3Dn; size2=3Dm;
+		data =3D new double[size1*size2];
+		}
+	public double this[int i,int j]{     // indexer
+		get =3D&gt; data[i+j*size1];
+		set =3D&gt; data[i+j*size1]=3Dvalue;
+		}
+}
+</pre>
+
+</li><li>You can generate (pseudo-)random numbers, uniformly distributed fr=
+om
+zero to one, like this,
+	<pre>var rnd =3D new System.Random(1); /* or any other seed */
+double x =3D rnd.NextDouble();
+double y =3D rnd.NextDouble();
+double z =3D rnd.NextDouble();
+	</pre>
+
+</li><li>QR-factorization of a matrix consists of two matrices, Q and R.
+There are several options for the interface to your routines:
+
+	<ol>
+
+<li><p>Return Q and R in a tuple (like scipy),
+
+	</p><pre>public static class QR{
+   public static (matrix,matrix) decomp(matrix A){
+      matrix Q=3DA.copy();
+      matrix R=3Dnew matrix(A.size2,A.size2);
+      /* orthogonalize Q and fill-in R */
+      return (Q,R);
+      }
+   public static vector solve(matrix Q, matrix R, vector b){ ... }
+   public static double det(matrix R){ ... }
+   public static matrix inverse(matrix Q,matrix R){ ... }
+}
+	</pre>
+
+</li><li>Keep Q and R and an instance of the non-static class QR,
+
+	<pre>public class QR{
+   matrix Q,R;
+   public QR(matrix A){ /* the above "decomp" is the constructor here */
+      Q=3DA.copy();
+      R=3Dnew matrix(A.size2,A.size2);
+      /* orthogonalize Q and fill-in R */
+      }
+   public vector solve(vector b){ ... }
+   public double det(){ ... }
+   public matrix inverse(){ ... }
+} </pre>
+
+</li><li>You can add matrices Q and R
+and the methods
+<code>decomp</code>,
+<code>solve</code>,
+<code>inverse</code>,
+<code>det</code>
+directly to your matrix class (declare it <code>partial</code> then
+you can add things to it using a file in your homework directory).
+
+	</li></ol>
+
+	</li></ul>
+
+<b>Tasks</b>
+
+<ol type=3D"A">
+
+<li><p>(6 points) <b>Solving linear equations using QR-decomposition
+by modified Gram-Schmidt orthogonalization</b>
+
+</p><p>Implement a static (or, at your choice, non-static) class "QR"
+with functions "decomp", "solve", and "det" (as indicated above). In
+the non-static class "decomp" becomes a constructor and must be called
+"QR").
+
+</p><p>The function "decomp" (or the constructor QR) should perform
+stabilized Gram-Schmidt orthogonalization of an n=C3=97m (where n=E2=89=A5m=
+)
+matrix A and calculate R.
+
+</p><p>
+The function/method "solve" should use the matrices Q and R from
+"decomp" and solve the
+equation <i>QRx=3Db</i> for the given right-hand-side "b".
+
+</p><p>The function/method "det" should return the determinant of matrix R =
+which
+is equal to the determinant of the original matrix.  Determinant of a
+triangular matrix is given by the product of its diagonal elements.
+
+</p><p>
+Check that your "decomp" works as intended:
+</p><ul>
+<li>generate a random tall (n&gt;m) matrix A (of a modest size);
+</li><li>factorize it into QR;
+</li><li>check that R is upper triangular;
+</li><li>check that Q<sup>T</sup>Q=3D1;
+</li><li>check that QR=3DA;
+</li></ul>
+
+<p>
+Check that you "solve" works as intended:
+</p><ul>
+<li>generate a random square matrix A (of a modest size);
+</li><li>generate a random vector b (of the same size);
+</li><li>factorize A into QR;
+</li><li>solve QRx=3Db;
+</li><li>check that Ax=3Db;
+</li></ul>
+
+</li><li><p> (3 points) <b>Matrix inverse by Gram-Schmidt QR factorization<=
+/b>
+
+
+</p><p>Add the function/method "inverse" to your "QR" class that, using
+the calculated Q and R, should calculate the inverse of the matrix A
+and returns it.
+
+</p><p>
+Check that you function works as intended:
+</p><ul>
+<li>generate a random square matrix A (of a modest size);
+</li><li>factorize A into QR;
+</li><li>calculate the inverse B;
+</li><li>check that AB=3DI, where I is the identity matrix;
+</li></ul>
+
+</li><li><p> (1 point) <b>Operations count for QR-decomposition</b>
+
+</p><p>Measure the time it takes to QR-factorize (with your implementation)
+a random NxN matrix as function of N. Convince yourself that it goes like
+O(N=C2=B3): measure (using the POSIX <code>time</code> utility) the time
+it takes to QR-factorize an N=C3=97N matrix for several values of N,
+plot the time as function of N in gnuplot and fit with N=C2=B3.
+
+</p><p>You can build your timing data like this (you might want to read
+</p><pre>man bash | less +/"for name"
+man 1 seq
+man 1 time </pre>
+),
+	<pre>out.times.data : main.exe
+	&gt;$@
+	for N in $$(seq 100 20 200); do \
+		time --format "$$N %e" --output $@ --append \
+		mono $&lt; -size:$$N 1&gt;out 2&gt;err ;\
+	done </pre>
+
+</li></ol>
+
+
+
+<span id=3D"PING_CONTENT_AUTOPLAY_DETECTION" style=3D"display: none;"></spa=
+n><span id=3D"PING_CONTENT_DLS_POPUP" style=3D"display: none;"></span><div =
+style=3D"background-color: transparent; border: none; bottom: 15px; display=
+: block; margin: 0px; opacity: 1; padding: 0px; position: fixed; right: 15p=
+x; z-index: 2147483647;"><template shadowmode=3D"closed"><div class=3D"dls_=
+_container">
+  <div class=3D"shield" style=3D"height: 115px; background: transparent; op=
+acity: 0.1; display: none;">
+    <div class=3D"shield__circle" style=3D"opacity: 1;">
+      <img src=3D"chrome-extension://fheoggkfdfchfphceeifdbepaooicaho/image=
+s/download_scan/mcafee_logo_white.svg?secret=3Dqa8jic" x-mcsrc=3D"" id=3D"d=
+ls_ballon_icon" x-mcsrcparsed=3D"true">
+    </div>
+    <div class=3D"dls__popup__expanded" style=3D"opacity: 0;">
+      <img src=3D"chrome-extension://fheoggkfdfchfphceeifdbepaooicaho/image=
+s/download_scan/download_scan_icon.svg?secret=3Dqa8jic" x-mcsrc=3D"" class=
+=3D"dls__icon" x-mcsrcparsed=3D"true">
+      <div class=3D"content">
+        <div class=3D"content__images">
+          <img src=3D"chrome-extension://fheoggkfdfchfphceeifdbepaooicaho/i=
+mages/download_scan/mcafee_logo_red.svg?secret=3Dqa8jic" x-mcsrc=3D"" id=3D=
+"dls_mcafee_logo" x-mcsrcparsed=3D"true">
+          <img src=3D"chrome-extension://fheoggkfdfchfphceeifdbepaooicaho/i=
+mages/download_scan/seperator_line.svg?secret=3Dqa8jic" x-mcsrc=3D"" class=
+=3D"seperator__line" x-mcsrcparsed=3D"true">
+          <img src=3D"chrome-extension://fheoggkfdfchfphceeifdbepaooicaho/i=
+mages/download_scan/webadvisor.svg?secret=3Dqa8jic" x-mcsrc=3D"" x-mcsrcpar=
+sed=3D"true">
+          <img src=3D"chrome-extension://fheoggkfdfchfphceeifdbepaooicaho/i=
+mages/download_scan/close-outline.svg?secret=3Dqa8jic" x-mcsrc=3D"" id=3D"d=
+ls_close_icon" x-mcsrcparsed=3D"true">
+        </div>
+        <p id=3D"download_scan_popup_expanded_descriptions">Den downloadede=
+ fil bliver scannet. Vi giver dig besked, hvis der er et problem.</p>
+      </div>
+    </div>
+  </div>
+</div></template></div></body></html>
+------MultipartBoundary--ynMlOqMsDs1jCX32AVA8mIbGNU1nG4CScNQqCg7sY2----
+Content-Type: image/svg+xml
+Content-Transfer-Encoding: quoted-printable
+Content-Location: chrome-extension://fheoggkfdfchfphceeifdbepaooicaho/images/download_scan/close-outline.svg?secret=qa8jic
+
+<svg width=3D"12" height=3D"12" viewBox=3D"0 0 12 12" fill=3D"none" xmlns=
+=3D"http://www.w3.org/2000/svg">
+<path d=3D"M11.4671 1.1549L10.3122 0L5.73355 4.57865L1.1549 0L0 1.1549L4.57=
+865 5.73355L0 10.3122L1.1549 11.4671L5.73355 6.88845L10.3122 11.4671L11.467=
+1 10.3122L6.88845 5.73355L11.4671 1.1549Z" fill=3D"#6E6E6E"/>
+</svg>
+
+------MultipartBoundary--ynMlOqMsDs1jCX32AVA8mIbGNU1nG4CScNQqCg7sY2----
+Content-Type: image/svg+xml
+Content-Transfer-Encoding: quoted-printable
+Content-Location: chrome-extension://fheoggkfdfchfphceeifdbepaooicaho/images/download_scan/webadvisor.svg?secret=qa8jic
+
+<svg width=3D"64" height=3D"10" viewBox=3D"0 0 64 10" fill=3D"none" xmlns=
+=3D"http://www.w3.org/2000/svg">
+<path fill-rule=3D"evenodd" clip-rule=3D"evenodd" d=3D"M8.12091 9.7761H7.18=
+323L5.53671 4.1395C5.45857 3.89001 5.37113 3.57527 5.27438 3.19527C5.17764 =
+2.81527 5.1274 2.5869 5.12368 2.51013C5.04182 3.01679 4.91159 3.57143 4.732=
+98 4.17405L3.13669 9.7761H2.19901L0.027832 1.35863H1.03249L2.3218 6.55766C2=
+.50041 7.28695 2.63064 7.94713 2.7125 8.53824C2.81297 7.83582 2.96181 7.148=
+76 3.15902 6.47705L4.62135 1.35863H5.62601L7.16091 6.52311C7.33951 7.11806 =
+7.49021 7.78976 7.613 8.53824C7.6837 7.99319 7.81765 7.32917 8.01486 6.5461=
+4L9.29859 1.35863H10.3033L8.12091 9.7761ZM13.7973 9.89105C12.8931 9.89105 1=
+2.1796 9.60702 11.6568 9.03894C11.134 8.47086 10.8726 7.68209 10.8726 6.672=
+6C10.8726 5.65544 11.1154 4.84748 11.601 4.24869C12.0866 3.64991 12.7387 3.=
+35052 13.5573 3.35052C14.3238 3.35052 14.9303 3.61057 15.3768 4.13066C15.82=
+33 4.65076 16.0466 5.33686 16.0466 6.18897V6.79351H11.8326C11.8512 7.53431 =
+12.0326 8.09662 12.3768 8.48046C12.721 8.8643 13.2056 9.05621 13.8308 9.056=
+21C14.4894 9.05621 15.1405 8.91419 15.7843 8.63016V9.48227C15.4568 9.62813 =
+15.147 9.73272 14.855 9.79605C14.5629 9.85938 14.2103 9.89105 13.7973 9.891=
+05ZM13.5459 4.15117C13.0548 4.15117 12.6632 4.31622 12.3711 4.64632C12.079 =
+4.97642 11.9069 5.43317 11.8548 6.0166H15.0529C15.0529 5.41398 14.9227 4.95=
+243 14.6622 4.63192C14.4018 4.31142 14.0297 4.15117 13.5459 4.15117ZM20.472=
+6 3.3622C21.2763 3.3622 21.9005 3.64528 22.3452 4.21143C22.7898 4.77759 23.=
+0122 5.57884 23.0122 6.61519C23.0122 7.65155 22.788 8.45663 22.3396 9.03047=
+C21.8912 9.6043 21.2689 9.89121 20.4726 9.89121C20.0745 9.89121 19.7107 9.8=
+1541 19.3814 9.66379C19.0521 9.51218 18.7759 9.279 18.5526 8.96426H18.4856L=
+18.2903 9.77606H17.6261V0.817383H18.5526V2.99372C18.5526 3.48119 18.5377 3.=
+91876 18.5079 4.30643H18.5526C18.9842 3.67694 19.6242 3.3622 20.4726 3.3622=
+ZM20.3389 4.1626C19.7063 4.1626 19.2505 4.34971 18.9714 4.72395C18.6924 5.0=
+9819 18.5528 5.72863 18.5528 6.61529C18.5528 7.50196 18.6961 8.13623 18.982=
+6 8.51815C19.2691 8.90007 19.7287 9.09102 20.3612 9.09102C20.9305 9.09102 2=
+1.3547 8.87704 21.6338 8.44906C21.9129 8.02108 22.0524 7.406 22.0524 6.6037=
+8C22.0524 5.78237 21.9129 5.17016 21.6338 4.76714C21.3547 4.36411 20.9231 4=
+.1626 20.3389 4.1626ZM29.8995 9.77594L28.8837 7.0987H25.613L24.6083 9.77594=
+H23.6483L26.8744 1.32393H27.6725L30.8819 9.77594H29.8995ZM28.5879 6.21798L2=
+7.6391 3.60982C27.5163 3.27972 27.3897 2.87478 27.2595 2.39499C27.1776 2.76=
+347 27.0604 3.16841 26.9079 3.60982L25.9479 6.21798H28.5879ZM36.0283 8.9297=
+1H35.978C35.5501 9.57072 34.9101 9.89121 34.058 9.89121C33.258 9.89121 32.6=
+357 9.6091 32.191 9.04486C31.7464 8.48062 31.5241 7.67842 31.5241 6.63822C3=
+1.5241 5.59803 31.7473 4.79007 32.1938 4.21431C32.6403 3.63856 33.2617 3.35=
+069 34.058 3.35069C34.8878 3.35069 35.5241 3.66159 35.9669 4.2834H36.0394L3=
+6.0004 3.82856L35.978 3.38523V0.817383H36.9045V9.77606H36.1511L36.0283 8.92=
+971ZM34.175 9.09111C34.8076 9.09111 35.2662 8.91359 35.5508 8.55855C35.8355=
+ 8.2035 35.9778 7.63063 35.9778 6.83993V6.63842C35.9778 5.74408 35.8336 5.1=
+0596 35.5452 4.72404C35.2569 4.34213 34.7964 4.15117 34.1638 4.15117C33.620=
+6 4.15117 33.2048 4.369 32.9164 4.80465C32.628 5.2403 32.4838 5.85539 32.48=
+38 6.64993C32.4838 7.45599 32.6271 8.06436 32.9136 8.47506C33.2001 8.88577 =
+33.6206 9.09111 34.175 9.09111ZM40.2084 9.77585L37.8865 3.46563H38.88L40.19=
+73 7.208C40.4949 8.08315 40.6698 8.65122 40.7219 8.91223H40.7666C40.8075 8.=
+70879 40.9368 8.28754 41.1545 7.64845C41.3721 7.00937 41.8605 5.61511 42.61=
+96 3.46563H43.6131L41.2912 9.77585H40.2084ZM45.5221 9.77585H44.5956V3.46563=
+H45.5221V9.77585ZM44.5173 1.75582C44.5173 1.53703 44.5694 1.37678 44.6736 1=
+.27507C44.7777 1.17335 44.908 1.12249 45.0642 1.12249C45.2131 1.12249 45.34=
+14 1.17431 45.4494 1.27795C45.5573 1.38158 45.6112 1.54087 45.6112 1.75582C=
+45.6112 1.97077 45.5573 2.13102 45.4494 2.23657C45.3414 2.34213 45.2131 2.3=
+9491 45.0642 2.39491C44.908 2.39491 44.7777 2.34213 44.6736 2.23657C44.5694=
+ 2.13102 44.5173 1.97077 44.5173 1.75582ZM51.4329 8.05441C51.4329 8.64167 5=
+1.2208 9.09459 50.7966 9.41318C50.3724 9.73176 49.7771 9.89105 49.0106 9.89=
+105C48.1994 9.89105 47.5668 9.75863 47.1129 9.49378V8.60713C47.4068 8.76066=
+ 47.7222 8.88157 48.0589 8.96985C48.3957 9.05813 48.7203 9.10227 49.0329 9.=
+10227C49.5166 9.10227 49.8887 9.02263 50.1492 8.86333C50.4096 8.70404 50.53=
+99 8.46127 50.5399 8.13501C50.5399 7.88936 50.4366 7.67921 50.2301 7.50456C=
+50.0236 7.32992 49.6208 7.12361 49.0217 6.88563C48.4524 6.66684 48.0478 6.4=
+7589 47.8078 6.31276C47.5678 6.14963 47.3892 5.96443 47.2719 5.75716C47.154=
+7 5.54989 47.0961 5.30232 47.0961 5.01444C47.0961 4.5001 47.2989 4.0942 47.=
+7045 3.79673C48.1101 3.49925 48.6664 3.35052 49.3733 3.35052C50.032 3.35052=
+ 50.6757 3.4887 51.3045 3.76506L50.9752 4.54233C50.3613 4.28132 49.805 4.15=
+081 49.3064 4.15081C48.8673 4.15081 48.5361 4.22182 48.3129 4.36384C48.0896=
+ 4.50586 47.978 4.70161 47.978 4.95111C47.978 5.12 48.0199 5.26393 48.1036 =
+5.38292C48.1873 5.50191 48.3222 5.61514 48.5082 5.72261C48.6943 5.83009 49.=
+0515 5.98554 49.5799 6.18897C50.3054 6.4615 50.7957 6.73593 51.0506 7.0123C=
+51.3054 7.28866 51.4329 7.63602 51.4329 8.05441ZM58.2201 6.61503C58.2201 7.=
+64371 57.9689 8.44687 57.4666 9.02455C56.9642 9.60222 56.2703 9.89105 55.38=
+47 9.89105C54.8377 9.89105 54.3521 9.75863 53.9279 9.49378C53.5037 9.22894 =
+53.1763 8.84894 52.9456 8.3538C52.7149 7.85865 52.5995 7.27906 52.5995 6.61=
+503C52.5995 5.58635 52.8488 4.7851 53.3475 4.21127C53.8461 3.63743 54.5382 =
+3.35052 55.4238 3.35052C56.2796 3.35052 56.9596 3.64415 57.4638 4.23142C57.=
+968 4.81869 58.2201 5.61322 58.2201 6.61503ZM53.5593 6.61529C53.5593 7.4213=
+5 53.7156 8.03548 54.0281 8.4577C54.3407 8.87992 54.8002 9.09102 55.4068 9.=
+09102C56.0133 9.09102 56.4738 8.88088 56.7882 8.46058C57.1026 8.04028 57.25=
+98 7.42519 57.2598 6.61529C57.2598 5.81308 57.1026 5.20375 56.7882 4.78729C=
+56.4738 4.37083 56.0096 4.1626 55.3956 4.1626C54.7891 4.1626 54.3314 4.3679=
+5 54.0226 4.77865C53.7137 5.18935 53.5593 5.80156 53.5593 6.61529ZM62.6347 =
+3.35052C62.9063 3.35052 63.15 3.37355 63.3658 3.41961L63.2375 4.30627C62.98=
+44 4.24869 62.7612 4.2199 62.5677 4.2199C62.0728 4.2199 61.6495 4.42717 61.=
+2979 4.84172C60.9463 5.25626 60.7704 5.77251 60.7704 6.39049V9.7759H59.8439=
+V3.46567H60.6086L60.7146 4.63445H60.7593C60.9863 4.22374 61.2598 3.90708 61=
+.5798 3.68446C61.8998 3.46183 62.2514 3.35052 62.6347 3.35052Z" fill=3D"#C0=
+1818"/>
+</svg>
+
+------MultipartBoundary--ynMlOqMsDs1jCX32AVA8mIbGNU1nG4CScNQqCg7sY2----
+Content-Type: image/svg+xml
+Content-Transfer-Encoding: quoted-printable
+Content-Location: chrome-extension://fheoggkfdfchfphceeifdbepaooicaho/images/download_scan/seperator_line.svg?secret=qa8jic
+
+<svg width=3D"1" height=3D"13" viewBox=3D"0 0 1 13" fill=3D"none" xmlns=3D"=
+http://www.w3.org/2000/svg">
+<path fill-rule=3D"evenodd" clip-rule=3D"evenodd" d=3D"M0.571726 11.6904V0.=
+875681V11.6904Z" fill=3D"#FF1C1C"/>
+<path d=3D"M0.571726 11.6904V0.875681" stroke=3D"#FF1C1C" stroke-width=3D"0=
+.866667" stroke-linecap=3D"square"/>
+</svg>
+
+------MultipartBoundary--ynMlOqMsDs1jCX32AVA8mIbGNU1nG4CScNQqCg7sY2----
+Content-Type: image/svg+xml
+Content-Transfer-Encoding: quoted-printable
+Content-Location: chrome-extension://fheoggkfdfchfphceeifdbepaooicaho/images/download_scan/mcafee_logo_red.svg?secret=qa8jic
+
+<svg width=3D"76" height=3D"16" viewBox=3D"0 0 76 16" fill=3D"none" xmlns=
+=3D"http://www.w3.org/2000/svg">
+<path fill-rule=3D"evenodd" clip-rule=3D"evenodd" d=3D"M37.7977 9.90788L35.=
+8231 8.69787L35.6761 8.93505C35.226 9.6643 34.6111 10.034 33.8486 10.0333C3=
+2.5424 10.0328 31.5581 9.01666 31.5588 7.66935C31.5594 6.32276 32.5451 5.30=
+793 33.8511 5.30848C34.6244 5.30921 35.2051 5.65942 35.6791 6.41113L35.8265=
+ 6.64466L37.8105 5.43209L37.6391 5.1761C36.6914 3.76032 35.4527 3.07214 33.=
+8525 3.07105C30.8275 3.06958 29.1939 5.4383 29.1929 7.66788C29.1916 9.89783=
+ 30.8224 12.2687 33.8472 12.2702C35.3884 12.2711 36.8426 11.4628 37.6428 10=
+.1604L37.7977 9.90788Z" fill=3D"#C01818"/>
+<path fill-rule=3D"evenodd" clip-rule=3D"evenodd" d=3D"M43.3073 4.8923L44.4=
+124 7.75346L42.187 7.75219L43.3073 4.8923ZM37.6988 12.2726L40.4293 12.274L4=
+1.2405 10.1933L45.3379 10.1953L46.1468 12.2773L48.889 12.2792L43.9977 0.082=
+4538L41.5624 0.0808105L42.211 1.69781L37.6988 12.2726Z" fill=3D"#C01818"/>
+<path fill-rule=3D"evenodd" clip-rule=3D"evenodd" d=3D"M50.0191 12.2794L52.=
+415 12.2809L52.418 6.80706L53.9803 6.80815L53.9815 4.51174L52.4193 4.51083L=
+52.4198 3.42552C52.42 2.95974 52.7224 2.46511 53.283 2.46547C53.5907 2.4656=
+6 53.7766 2.51989 53.9619 2.60168L54.2285 2.72018L55.224 0.479462L54.9371 0=
+.358589C54.492 0.17034 53.8717 0.102783 53.4392 0.102418C52.3529 0.10187 51=
+.4573 0.468142 50.8487 1.16143C50.3175 1.76671 50.0244 2.60862 50.0237 3.53=
+124L50.0232 4.50937L48.9654 4.50882L48.9642 6.80541L50.0221 6.80559L50.0191=
+ 12.2794Z" fill=3D"#C01818"/>
+<path fill-rule=3D"evenodd" clip-rule=3D"evenodd" d=3D"M17.8979 0.0106201V1=
+2.261L20.5011 12.2628L20.505 5.25912L23.0282 7.19748L25.5533 5.25912V12.265=
+8L28.1526 12.267L28.1594 0.0106201L23.0298 4.00748L17.8979 0.0106201Z" fill=
+=3D"#C01818"/>
+<path fill-rule=3D"evenodd" clip-rule=3D"evenodd" d=3D"M57.2864 6.56615C57.=
+5992 5.73045 58.2739 5.24257 59.1459 5.24294C60.0272 5.24348 60.7151 5.7213=
+2 61.0798 6.56834L57.2864 6.56615ZM59.376 3.11328C56.3604 3.11164 54.7314 5=
+.47378 54.73 7.69661C54.7291 9.92017 56.3553 12.2834 59.3711 12.2852H59.372=
+5H59.3744C60.7573 12.2699 62.0541 11.6201 63.0579 10.4482L61.1038 9.34922C6=
+0.6029 9.87836 59.9943 10.1566 59.3229 10.1563C58.3388 10.1555 57.4664 9.47=
+94 57.2381 8.59494L63.7543 8.59841L63.7547 7.98839C63.7566 4.62767 61.1954 =
+3.11438 59.376 3.11328Z" fill=3D"#C01818"/>
+<path fill-rule=3D"evenodd" clip-rule=3D"evenodd" d=3D"M67.0804 6.57129C67.=
+3931 5.73558 68.0673 5.24752 68.9399 5.24807C69.8212 5.24862 70.5091 5.7264=
+5 70.8738 6.57348L67.0804 6.57129ZM69.1698 3.11878C66.1538 3.11695 64.5253 =
+5.47909 64.5239 7.7021C64.5229 9.92566 66.1487 12.2889 69.1648 12.2907H69.1=
+662H69.1678C70.5512 12.2754 71.8481 11.6252 72.8517 10.4537L70.8976 9.35471=
+C70.3963 9.88385 69.7881 10.1621 69.1168 10.1617C68.1325 10.161 67.2599 9.4=
+8489 67.0319 8.60044L73.5481 8.60391L73.5486 7.99388C73.5506 4.63298 70.989=
+1 3.11987 69.1698 3.11878Z" fill=3D"#C01818"/>
+<path fill-rule=3D"evenodd" clip-rule=3D"evenodd" d=3D"M73.2422 2.70959H74.=
+2565V2.90496H73.8581V4.00141H73.6389V2.90496H73.2422V2.70959Z" fill=3D"#C01=
+818"/>
+<path fill-rule=3D"evenodd" clip-rule=3D"evenodd" d=3D"M74.3988 2.70959H74.=
+7076L75.0532 3.72113H75.0568L75.3937 2.70959H75.6989V4.00141H75.4902V3.0044=
+7H75.4865L75.1394 4.00141H74.9585L74.6109 3.00447H74.6076V4.00141H74.3988V2=
+.70959Z" fill=3D"#C01818"/>
+<path fill-rule=3D"evenodd" clip-rule=3D"evenodd" d=3D"M2.63757 10.4604V4.2=
+526L6.4351 6.06369V3.0687L0 0.00012207V12.1965L6.4351 15.2676V12.2722L2.637=
+57 10.4604Z" fill=3D"#C01818"/>
+<path fill-rule=3D"evenodd" clip-rule=3D"evenodd" d=3D"M10.2328 10.4603V4.2=
+5248L6.4353 6.06357V3.06858L12.8704 0V12.1963L6.4353 15.2675V12.2721L10.232=
+8 10.4603Z" fill=3D"#C01818"/>
+</svg>
+
+------MultipartBoundary--ynMlOqMsDs1jCX32AVA8mIbGNU1nG4CScNQqCg7sY2----
+Content-Type: image/svg+xml
+Content-Transfer-Encoding: quoted-printable
+Content-Location: chrome-extension://fheoggkfdfchfphceeifdbepaooicaho/images/download_scan/download_scan_icon.svg?secret=qa8jic
+
+<svg width=3D"73" height=3D"65" viewBox=3D"0 0 73 65" fill=3D"none" xmlns=
+=3D"http://www.w3.org/2000/svg">
+<rect width=3D"72.7844" height=3D"65" fill=3D"white"/>
+<path d=3D"M62.6649 32.891C62.6649 47.186 51.0766 58.7743 36.7817 58.7743C2=
+2.4868 58.7743 10.8984 47.186 10.8984 32.891C10.8984 18.5961 22.4868 7.0078=
+1 36.7817 7.00781C51.0766 7.00781 62.6649 18.5961 62.6649 32.891ZM17.1182 3=
+2.891C17.1182 43.7509 25.9218 52.5545 36.7817 52.5545C47.6415 52.5545 56.44=
+52 43.7509 56.4452 32.891C56.4452 22.0312 47.6415 13.2276 36.7817 13.2276C2=
+5.9218 13.2276 17.1182 22.0312 17.1182 32.891Z" fill=3D"#4258FF"/>
+<circle cx=3D"36.9763" cy=3D"55.6605" r=3D"3.11377" fill=3D"#4258FF"/>
+<path fill-rule=3D"evenodd" clip-rule=3D"evenodd" d=3D"M42.0805 31.351L37.6=
+252 35.8064L37.6249 23.356L35.549 23.356L35.5493 35.8071L31.0933 31.351L29.=
+6255 32.8189L35.1191 38.3125C35.9297 39.1232 37.2441 39.1232 38.0548 38.312=
+5L43.5484 32.8189L42.0805 31.351ZM27.2456 43.0765H45.9282V41.0007H27.2456V4=
+3.0765Z" fill=3D"#4258FF"/>
+</svg>
+
+------MultipartBoundary--ynMlOqMsDs1jCX32AVA8mIbGNU1nG4CScNQqCg7sY2----
+Content-Type: image/svg+xml
+Content-Transfer-Encoding: quoted-printable
+Content-Location: chrome-extension://fheoggkfdfchfphceeifdbepaooicaho/images/download_scan/mcafee_logo_white.svg?secret=qa8jic
+
+<svg width=3D"25" height=3D"30" viewBox=3D"0 0 25 30" fill=3D"none" xmlns=
+=3D"http://www.w3.org/2000/svg">
+<path stroke=3D"white" stroke-width=3D"0.15" d=3D"M5.23996 8.57177V20.1982L=
+12.5768 23.5918V29.2021L0.144043 23.4498V0.606491L12.5768 6.35377V11.9634L5=
+.23996 8.57177Z" fill=3D"white"/>
+<path stroke=3D"white" stroke-width=3D"0.15" d=3D"M19.9137 8.5722V20.1986L1=
+2.5768 23.5918V29.2021L25.0097 23.4502V0.606925L12.5768 6.35377V11.9634L19.=
+9137 8.5722Z" fill=3D"white"/>
+</svg>
+
+------MultipartBoundary--ynMlOqMsDs1jCX32AVA8mIbGNU1nG4CScNQqCg7sY2----
+Content-Type: text/css
+Content-Transfer-Encoding: quoted-printable
+Content-Location: chrome-extension://fheoggkfdfchfphceeifdbepaooicaho/css/mcafee_fonts.css
+
+@charset "utf-8";
+
+@font-face { font-family: McAfeePoppins; src: url("../../../fonts/Poppins-T=
+hin.ttf") format("truetype"); font-weight: 100; font-style: normal; }
+
+@font-face { font-family: McAfeePoppins; src: url("../../../fonts/Poppins-T=
+hinItalic.ttf") format("truetype"); font-weight: 100; font-style: italic; }
+
+@font-face { font-family: McAfeePoppins; src: url("../../../fonts/Poppins-E=
+xtraLight.ttf") format("truetype"); font-weight: 200; font-style: normal; }
+
+@font-face { font-family: McAfeePoppins; src: url("../../../fonts/Poppins-E=
+xtraLightItalic.ttf") format("truetype"); font-weight: 200; font-style: ita=
+lic; }
+
+@font-face { font-family: McAfeePoppins; src: url("../../../fonts/Poppins-L=
+ight.ttf") format("truetype"); font-weight: 300; font-style: normal; }
+
+@font-face { font-family: McAfeePoppins; src: url("../../../fonts/Poppins-L=
+ightItalic.ttf") format("truetype"); font-weight: 300; font-style: italic; =
+}
+
+@font-face { font-family: McAfeePoppins; src: url("../../../fonts/Poppins-R=
+egular.ttf") format("truetype"); font-weight: 400; font-style: normal; }
+
+@font-face { font-family: McAfeePoppins; src: url("../../../fonts/Poppins-I=
+talic.ttf") format("truetype"); font-weight: 400; font-style: italic; }
+
+@font-face { font-family: McAfeePoppins; src: url("../../../fonts/Poppins-M=
+edium.ttf") format("truetype"); font-weight: 500; font-style: normal; }
+
+@font-face { font-family: McAfeePoppins; src: url("../../../fonts/Poppins-M=
+ediumItalic.ttf") format("truetype"); font-weight: 500; font-style: italic;=
+ }
+
+@font-face { font-family: McAfeePoppins; src: url("../../../fonts/Poppins-S=
+emiBold.ttf") format("truetype"); font-weight: 600; font-style: normal; }
+
+@font-face { font-family: McAfeePoppins; src: url("../../../fonts/Poppins-S=
+emiBoldItalic.ttf") format("truetype"); font-weight: 600; font-style: itali=
+c; }
+
+@font-face { font-family: McAfeePoppins; src: url("../../../fonts/Poppins-B=
+old.ttf") format("truetype"); font-weight: 700; font-style: normal; }
+
+@font-face { font-family: McAfeePoppins; src: url("../../../fonts/Poppins-B=
+oldItalic.ttf") format("truetype"); font-weight: 700; font-style: italic; }
+
+@font-face { font-family: McAfeePoppins; src: url("../../../fonts/Poppins-E=
+xtraBold.ttf") format("truetype"); font-weight: 800; font-style: normal; }
+
+@font-face { font-family: McAfeePoppins; src: url("../../../fonts/Poppins-E=
+xtraBoldItalic.ttf") format("truetype"); font-weight: 800; font-style: ital=
+ic; }
+
+@font-face { font-family: McAfeePoppins; src: url("../../../fonts/Poppins-B=
+lack.ttf") format("truetype"); font-weight: 900; font-style: normal; }
+
+@font-face { font-family: McAfeePoppins; src: url("../../../fonts/Poppins-B=
+lackItalic.ttf") format("truetype"); font-weight: 900; font-style: italic; }
+------MultipartBoundary--ynMlOqMsDs1jCX32AVA8mIbGNU1nG4CScNQqCg7sY2----
+Content-Type: text/css
+Content-Transfer-Encoding: quoted-printable
+Content-Location: https://fedorov.sdfeu.org/prog/style.css
+
+@charset "utf-8";
+
+.grey { color: darkgrey; background-color: lightgrey; }
+
+a { text-decoration: none; }
+
+a:link { text-decoration: underline; color: blue; }
+
+a:visited { text-decoration: underline; color: darkred; }
+
+a:hover { text-decoration: underline; color: red; background: yellow; }
+
+code { background: lightgrey; font-family: monospace, sans-serif; font-size=
+: small; border-width: 1px; border-radius: 5px; padding: 2px; }
+
+pre { border-style: dashed; border-width: 1px; border-radius: 2px; padding:=
+ 5px; }
+
+dt { font-weight: bold; margin-top: 1ex; }
+
+dl dd { margin-left: 1em; margin-bottom: 0em; }
+------MultipartBoundary--ynMlOqMsDs1jCX32AVA8mIbGNU1nG4CScNQqCg7sY2------
